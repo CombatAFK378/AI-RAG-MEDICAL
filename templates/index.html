@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Medical Chatbot</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+</head>
+<body>
+  <div id="chat-container">
+    <header id="chat-header">AI-chatbot-with-Rag</header>
+    <main id="chat-messages"></main>
+    <form id="chat-input-area">
+      <input
+        type="text"
+        id="chat-input"
+        name="msg"
+        placeholder="Type your message..."
+        autocomplete="off"
+        required
+      />
+      <button type="submit">Send</button>
+    </form>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script>
+    $(function() {
+      const $messages = $('#chat-messages');
+      const $inputForm = $('#chat-input-area');
+      const $input = $('#chat-input');
+
+      function formatTime(date) {
+        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      }
+
+      $inputForm.on('submit', function(e) {
+        e.preventDefault();
+        const msg = $input.val().trim();
+        if (!msg) return;
+
+        const time = formatTime(new Date());
+        // Append user message
+        $messages.append(`
+          <div class="message user">
+            ${msg}
+            <div class="timestamp">${time}</div>
+          </div>
+        `);
+        $input.val('');
+        $messages.scrollTop($messages[0].scrollHeight);
+
+        // Send to backend
+        $.ajax({
+          url: '/get',
+          type: 'POST',
+          data: { msg },
+          success: function(data) {
+            const time = formatTime(new Date());
+            $messages.append(`
+              <div class="message bot">
+                ${data}
+                <div class="timestamp">${time}</div>
+              </div>
+            `);
+            $messages.scrollTop($messages[0].scrollHeight);
+          },
+          error: function() {
+            $messages.append(`
+              <div class="message bot">
+                Sorry, something went wrong. Please try again.
+                <div class="timestamp">${formatTime(new Date())}</div>
+              </div>
+            `);
+            $messages.scrollTop($messages[0].scrollHeight);
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>
